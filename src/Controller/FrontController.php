@@ -10,6 +10,7 @@ use App\Entity\Video;
 use App\Form\UserType;
 use App\Repository\VideoRepository;
 use App\Utils\CategoryTreeFrontPage;
+use App\Utils\Interfaces\CacheInterface;
 use App\Utils\VideoForNoValidSubscription;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,17 +32,32 @@ class FrontController extends AbstractController
     /**
      * @Route("/video-list/category/{categoryname},{id}/{page}", defaults={"page": "1"}, name="video_list")
      */
-    public function videoList($id, $page, CategoryTreeFrontPage $categories, Request $request, VideoForNoValidSubscription $video_no_members)
+    public function videoList($id, $page, CategoryTreeFrontPage $categories,
+                              Request $request,
+                              VideoForNoValidSubscription $video_no_members,
+                              CacheInterface $cache)
     {
-        $categories->getCategoryListAndParent($id);
-        $ids = $categories->getChildIds($id);
-        array($ids, $id);
-        $videos = $this->getDoctrine()->getRepository(Video::class)->findByChildIds($ids, $page, $request->get('sortby'));
-        return $this->render('front/video_list.html.twig', [
-            'subcategories' => $categories,
-            'videos' => $videos,
-            'video_no_members' => $video_no_members->check()
-        ]);
+
+        $cache = $cache->cache;
+        $video_list = $cache->getItem('video_list'.$id.$page.$request->get('sort_by'));
+        $video_list->expiresAfter(60);
+
+        if(!$video_list->isHit()) {
+            $categories->getCategoryListAndParent($id);
+            $ids = $categories->getChildIds($id);
+            array_push($ids, $id);
+            $videos = $this->getDoctrine()->getRepository(Video::class)->findByChildIds($ids, $page, $request->get('sortby'));
+            $response = $this->render('front/video_list.html.twig', [
+                'subcategories' => $categories,
+                'videos' => $videos,
+                'video_no_members' => $video_no_members->check()
+            ]);
+
+            $video_list->set($response);
+            $cache->save($video_list);
+        }
+
+        return $video_list->get();
     }
 
     /**

@@ -10,6 +10,8 @@
         "knplabs/knp-time-bundle": "^1.11",
         "sensio/framework-extra-bundle": "^5.5",
         "sensiolabs/security-checker": "^6.0",
+        "snc/redis-bundle": "^3.2",
+        "symfony-bundles/redis-bundle": "^3.0",
         "symfony/asset": "4.4.*",
         "symfony/cache": "4.4.*",
         "symfony/console": "4.4.*",
