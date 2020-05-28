@@ -54,7 +54,7 @@ class SecurityController extends AbstractController
         if($form->isSubmitted() && $form->isValid()) {
             $em = $this->getDoctrine()->getManager();
             $user->setName($request->request->get('user')['name']);
-            $user->setLastName($request->request->get('user')['lastname']);
+            $user->setLastName($request->request->get('user')['last_name']);
             $user->setEmail($request->request->get('user')['email']);
             $password = $passwordEncoder->encodePassword($user, $request->request->get('user')['password']['first']);
             $user->setPassword($password);
